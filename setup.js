@@ -26,10 +26,12 @@ void main() {
                          0, cosP, sinP, 0,
                          0, -sinP, cosP, 0,
                          0, 0, 0, 1);
-    gl_Position = pitchMat * zRotMat * (pos + vec4(0, 0, -25.0, 0));
+    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
 
     // pass the transformed pos to the fragment shader to do lighting on
     transformedPos = gl_Position.xyz;
+
+    gl_Position = pitchMat * gl_Position;
 
     // perspective transform
     gl_Position.z -= 200.0;
@@ -45,6 +47,8 @@ void main() {
 `;
 
 var fs = `
+#extension GL_OES_standard_derivatives : enable
+
 uniform sampler2D textureSampler;
 
 varying lowp vec4 vertColor;
@@ -52,16 +56,31 @@ varying highp vec2 vertTexCoord;
 varying highp vec3 transformedPos;
 
 void main() {
-    gl_FragColor = vertColor * texture2D(textureSampler, vertTexCoord);
+    highp vec3 normal = normalize(cross(dFdx(transformedPos), dFdy(transformedPos)));
+    gl_FragColor = vec4(0.0, 0.0, 0.0, vertColor.a);
+
+    lowp vec3 color = vertColor.rgb;
+    if(vertTexCoord.x != 0.0 || vertTexCoord.y != 0.0) {
+        color *= texture2D(textureSampler, vertTexCoord).rgb;
+    }
+
+    lowp vec3 sunDirection = normalize(vec3(-1, 1, -1));
+    highp float sunFac = dot(normal, -sunDirection);
+    if(sunFac > 0.0) {
+        gl_FragColor.rgb += sunFac * color.rgb * vec3(0.99, 0.98, 0.93) * 0.65;
+    }
+
+    gl_FragColor.rgb += color.rgb * vec3(0.89, 0.93, 0.97) * 0.6;
 }
 `;
 
 function setup() {
     canvas = document.getElementById("view");
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
     gl = canvas.getContext("webgl");
+    gl.getExtension('OES_standard_derivatives');
 
     function makeShader(source, type) {
         const s = gl.createShader(type);

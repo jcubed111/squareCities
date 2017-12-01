@@ -43,22 +43,24 @@ class Road{
 			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
 			const yMin = -55 +  this.yIndex*10 + 10;
 			const yMax = -55 +  this.yIndex*10 + 20;
-			drawVerts(square(
-				new Vert(xMin, yMin, roadZ,   0, 1),
-				new Vert(xMax, yMin, roadZ,   0, 2),
-				new Vert(xMax, yMax, roadZ,   3, 2),
-				new Vert(xMin, yMax, roadZ,   3, 1),
+			drawVerts(building(
+				new Vert(xMin, yMin, 0),
+				new Vert(xMax, yMax, roadZ),
+				new TexSpec(0, 0, 0, 0, 149, 149, 149),
+				new TexSpec(0, 1, 3, 2),
+				true
 			));
 		}else{
 			const xMin = -55 +  this.xIndex*10 + 10;
 			const xMax = -55 +  this.xIndex*10 + 20;
 			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
 			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
-			drawVerts(square(
-				new Vert(xMin, yMin, roadZ,   0, 2),
-				new Vert(xMax, yMin, roadZ,   3, 2),
-				new Vert(xMax, yMax, roadZ,   3, 1),
-				new Vert(xMin, yMax, roadZ,   0, 1),
+			drawVerts(building(
+				new Vert(xMin, yMin, 0),
+				new Vert(xMax, yMax, roadZ),
+				new TexSpec(0, 0, 0, 0, 149, 149, 149),
+				new TexSpec(0, 1, 3, 2),
+				false
 			));
 		}
 	}
@@ -79,16 +81,11 @@ class Building{
 
 class Base{
 	render() {
-		drawVerts(cube(
-	        new Vert(-55, -55, 0, 1, 0),
-	        new Vert(55, -55, 0, 16, 0),
-	        new Vert(55, 55, 0, 1, 0),
-	        new Vert(-55, 55, 0, 16, 0),
-
-	        new Vert(-55, -55, -6, 1, 1),
-	        new Vert(55, -55, -6, 16, 1),
-	        new Vert(55, 55, -6, 1, 1),
-	        new Vert(-55, 55, -6, 16, 1),
+		drawVerts(building(
+	        new Vert(-55, -55, -5),
+	        new Vert(55, 55, 0),
+			new TexSpec(1, 0, 16, 1),
+			new TexSpec(0, 0, 0, 0, 0, 216, 0),
 	    ));
 	}
 }

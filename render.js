@@ -24,6 +24,65 @@ function square(v0, v1, v2, v3) {
     return [v0, v1, v2, v0, v2, v3];
 }
 
+class TexSpec{
+    constructor(xmin, ymin, xmax, ymax, r=255, g=255, b=255) {
+        this.xmin = xmin;
+        this.xmax = xmax;
+        this.ymin = ymin;
+        this.ymax = ymax;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+    }
+}
+
+function building(vmin, vmax, wallTex, roofTex, rotateRoofTex = false) {
+    const rXmin = roofTex.xmin;
+    const rYmin = roofTex.ymin;
+    const rXmax = roofTex.xmax;
+    const rYmax = roofTex.ymax;
+
+    return [
+        // roof
+        rotateRoofTex ? square(
+            new Vert(vmin.x, vmin.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmin, rYmax),
+            new Vert(vmax.x, vmin.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmin, rYmin),
+            new Vert(vmax.x, vmax.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmax, rYmin),
+            new Vert(vmin.x, vmax.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmax, rYmax),
+        ) : square(
+            new Vert(vmin.x, vmin.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmin, rYmin),
+            new Vert(vmax.x, vmin.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmax, rYmin),
+            new Vert(vmax.x, vmax.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmax, rYmax),
+            new Vert(vmin.x, vmax.y, vmax.z, roofTex.r, roofTex.g, roofTex.b, rXmin, rYmax),
+        ),
+        // walls
+        square(
+            new Vert(vmin.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmax.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmax.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmin.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmax.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmax.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmax.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmax.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmax.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmin.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmin.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmax.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmin.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmin.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmin.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmin.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+    ].reduce((a, b) => a.concat(b), []);
+}
+
 
 function drawVerts(verts) {
     const b = gl.createBuffer();
