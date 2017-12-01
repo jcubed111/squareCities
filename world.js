@@ -29,14 +29,37 @@ class Road{
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
 
-		this.type = 0; // 0 - no road, 1 - small, 2 - medium, 3 - highway
+		this.type = 1; // 0 - no road, 1 - small, 2 - medium, 3 - highway
 		this.intersection0 = null; // the intersection to the north or east
 		this.intersection1 = null; // the intersection to the south or west
 	}
 
 	render() {
-		if(this.isNS) {
+		if(this.type == 0) return;
+		const roadZ = 0.1;
 
+		if(this.isNS) {
+			const xMin = -55 +  this.xIndex*10 + 10 - this.type;
+			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
+			const yMin = -55 +  this.yIndex*10 + 10;
+			const yMax = -55 +  this.yIndex*10 + 20;
+			drawVerts(square(
+				new Vert(xMin, yMin, roadZ,   0, 1),
+				new Vert(xMax, yMin, roadZ,   0, 2),
+				new Vert(xMax, yMax, roadZ,   3, 2),
+				new Vert(xMin, yMax, roadZ,   3, 1),
+			));
+		}else{
+			const xMin = -55 +  this.xIndex*10 + 10;
+			const xMax = -55 +  this.xIndex*10 + 20;
+			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
+			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
+			drawVerts(square(
+				new Vert(xMin, yMin, roadZ,   0, 2),
+				new Vert(xMax, yMin, roadZ,   3, 2),
+				new Vert(xMax, yMax, roadZ,   3, 1),
+				new Vert(xMin, yMax, roadZ,   0, 1),
+			));
 		}
 	}
 }

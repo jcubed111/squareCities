@@ -66,6 +66,8 @@ function drawVerts(verts) {
     gl.enableVertexAttribArray(texCoordLocation);
 
     gl.drawArrays(gl.TRIANGLES, 0, verts.length);
+
+    gl.deleteBuffer(b);
 }
 
 function render() {

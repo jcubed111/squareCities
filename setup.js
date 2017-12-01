@@ -37,7 +37,7 @@ void main() {
 
     // screen coord transform
     gl_Position.z += 200.0;
-    gl_Position *= vec4(viewScaling, 0.01, 1.0);
+    gl_Position *= vec4(viewScaling, -0.01, 1.0);
 
     vertColor = color;
     vertTexCoord = texCoord;
@@ -92,11 +92,11 @@ function setup() {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, i);
 
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        // gl.generateMipmap(gl.TEXTURE_2D);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.generateMipmap(gl.TEXTURE_2D);
     }
     i.src = "texture.png";
 
@@ -110,4 +110,16 @@ function setup() {
     });
 
     world = new World();
+
+    function zoomer(e) {
+        const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+
+        const f = delta > 0 ? Math.SQRT2 : Math.SQRT1_2;
+
+        camProps.zoom *= f;
+
+    }
+    canvas.addEventListener("mousewheel", zoomer, false);
+    canvas.addEventListener("DOMMouseScroll", zoomer, false);
+
 }
