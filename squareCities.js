@@ -1,12 +1,34 @@
 var vs = `
 attribute vec4 pos;
 
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
+uniform float zRot;
+uniform float pitch;
+uniform float fov;
+uniform float zoom;
+uniform vec2 viewScaling;
 
 void main() {
+    float cosZ = cos(zRot);
+    float sinZ = sin(zRot);
+    mat4 zRotMat = mat4(cosZ, sinZ, 0, 0,
+                        -sinZ, cosZ, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1);
+    float cosP = cos(pitch);
+    float sinP = sin(pitch);
+    mat4 pitchMat = mat4(1, 0, 0, 0,
+                         0, cosP, sinP, 0,
+                         0, -sinP, cosP, 0,
+                         0, 0, 0, 1);
+    gl_Position = pitchMat * zRotMat * (pos + vec4(0, 0, -0.25, 0));
 
-    gl_Position = pos;
+    // perspective transform
+    gl_Position.z -= 3.0;
+    gl_Position.xy *= vec2(zoom/tan(fov/2.0)/-gl_Position.z);
+
+    // screen coord transform
+    gl_Position.z += 3.0;
+    gl_Position *= vec4(viewScaling, 1.0, 1.0);
 }
 `;
 
@@ -27,7 +49,7 @@ function makeShader(source, type) {
     gl.shaderSource(s, source);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        throw ("Shader error: " + gl.getShaderInfoLog(shader));
+        throw ("Shader error: " + gl.getShaderInfoLog(s));
         return false;
     }
     return s;
@@ -60,17 +82,36 @@ function drawVerts(verts) {
     gl.drawArrays(gl.TRIANGLE_FAN, 0, verts.length);
 }
 
+var camProps = {
+    zRot: 0.0,
+    viewScaling: [],
+    pitch: -Math.PI/2 + 0.2,
+    fov: 100,
+    zoom: 4.0,
+};
+
 function render() {
     gl.clearColor(113/255, 211/255, 244/255, 1.0);
     // Clear the color buffer with specified clear color
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    camProps.viewScaling = [1, canvas.width/canvas.height];
+
+    // set transforms
+    gl.uniform1f(gl.getUniformLocation(program, 'zRot'), camProps.zRot);
+    gl.uniform1f(gl.getUniformLocation(program, 'pitch'), camProps.pitch);
+    gl.uniform1f(gl.getUniformLocation(program, 'fov'), camProps.fov*Math.PI/180);
+    gl.uniform1f(gl.getUniformLocation(program, 'zoom'), camProps.zoom);
+    gl.uniform2fv(gl.getUniformLocation(program, 'viewScaling'), camProps.viewScaling);
+
     drawVerts([
-        [-55, -55, 0],
-        [55, -55, 0],
-        [55, 55, 0],
-        [-55, 55, 0],
+        [-.5, -.5, 0],
+        [.5, -.5, 0],
+        [.5, .5, 0],
+        [-.5, .5, 0],
     ]);
 }
 
 render();
+
+setInterval(function() { camProps.zRot += 0.003; render(); }, 1000/60);
