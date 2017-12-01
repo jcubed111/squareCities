@@ -20,6 +20,10 @@ function cube(v0, v1, v2, v3, v4, v5, v6, v7) {
     ];
 }
 
+function square(v0, v1, v2, v3) {
+    return [v0, v1, v2, v0, v2, v3];
+}
+
 
 function drawVerts(verts) {
     const b = gl.createBuffer();
