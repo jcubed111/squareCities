@@ -19,6 +19,16 @@
 </head>
 <body>
     <canvas id="view"></canvas>
-    <script src="squareCities.js"></script>
+    <script src="globals.js"></script>
+    <script src="setup.js"></script>
+    <script src="vert.js"></script>
+    <script src="world.js"></script>
+    <script src="render.js"></script>
+    <script src="drawingFunctions.js"></script>
+    <script>
+        setup();
+        step();
+        world.generate();
+    </script>
 </body>
 </html>
