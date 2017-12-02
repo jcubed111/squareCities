@@ -12,4 +12,8 @@ var camProps = {
     zoom: 1.0,
 };
 var world;
-var renderBuffer;
+var renderBuffer; // for vert info
+
+var shadowDepthTexture;
+var shadowFramebuffer;
+var shadowRenderBuffer;

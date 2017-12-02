@@ -1,5 +1,22 @@
-class Intersection{
+class Renderable{
+	render() {
+		if(this.floats == undefined) {
+			this.floats = new Float32Array(
+				this.generateVerts().map(v => v.toArray()).reduce((a, b) => a.concat(b), [])
+			);
+		}
+
+		if(this.floats.length == 0) return;
+
+    	gl.bufferData(gl.ARRAY_BUFFER, this.floats, gl.DYNAMIC_DRAW);
+    	gl.drawArrays(gl.TRIANGLES, 0, this.floats.length/8);
+	}
+}
+
+class Intersection extends Renderable{
 	constructor(xIndex, yIndex, nRoad, sRoad, eRoad, wRoad) {
+		super();
+
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
 
@@ -18,13 +35,15 @@ class Intersection{
 		this.type = 0;
 	}
 
-	render() {
-
+	generateVerts() {
+		return [];
 	}
 }
 
-class Road{
+class Road extends Renderable{
 	constructor(isNS, xIndex, yIndex) {
+		super();
+
 		this.isNS = isNS;
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
@@ -34,7 +53,7 @@ class Road{
 		this.intersection1 = null; // the intersection to the south or west
 	}
 
-	render() {
+	generateVerts() {
 		if(this.type == 0) return;
 		const roadZ = 0.1;
 
@@ -43,55 +62,57 @@ class Road{
 			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
 			const yMin = -55 +  this.yIndex*10 + 10;
 			const yMax = -55 +  this.yIndex*10 + 20;
-			drawVerts(building(
+			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
 				new TexSpec(0, 0, 0, 0, 149, 149, 149),
 				new TexSpec(0, 1, 3, 2),
 				true
-			));
+			);
 		}else{
 			const xMin = -55 +  this.xIndex*10 + 10;
 			const xMax = -55 +  this.xIndex*10 + 20;
 			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
 			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
-			drawVerts(building(
+			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
 				new TexSpec(0, 0, 0, 0, 149, 149, 149),
 				new TexSpec(0, 1, 3, 2),
 				false
-			));
+			);
 		}
 	}
 }
 
-class Building{
+class Building extends Renderable{
 	constructor(x, y, dx, dy) {
+		super();
+
 		this.x = x;
 		this.y = y;
 		this.dx = dx;
 		this.dy = dy;
 	}
 
-	render() {
-		drawVerts(building(
+	generateVerts() {
+		return building(
 	        new Vert(this.x, this.y, 0),
 	        new Vert(this.x+this.dx, this.y+this.dy, 10),
 			new TexSpec(1, 0, 16, 1),
 			new TexSpec(0, 0, 0, 0, 0, 216, 0),
-	    ));
+	    );
 	}
 }
 
-class Base{
-	render() {
-		drawVerts(building(
+class Base extends Renderable{
+	generateVerts() {
+		return building(
 	        new Vert(-55, -55, -5),
 	        new Vert(55, 55, 0),
 			new TexSpec(1, 0, 16, 1),
 			new TexSpec(0, 0, 0, 0, 0, 216, 0),
-	    ));
+	    );
 	}
 }
 

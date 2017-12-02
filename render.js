@@ -86,7 +86,6 @@ function building(vmin, vmax, wallTex, roofTex, rotateRoofTex = false) {
 function drawVerts(verts) {
     const floats = verts.map(v => v.toArray()).reduce((a, b) => a.concat(b), []);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floats), gl.DYNAMIC_DRAW);
-
     gl.drawArrays(gl.TRIANGLES, 0, verts.length);
 }
 
@@ -135,53 +134,29 @@ function render() {
     currentProgram = shadowProgram;
     gl.useProgram(shadowProgram);
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    // Clear the color buffer with specified clear color
+    gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFramebuffer);
+    gl.viewport(0, 0, 1024, 1024);
+
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
 
+    // set transforms
     gl.uniform1f(gl.getUniformLocation(shadowProgram, 'zRot'), camProps.zRot*Math.PI/180);
-    gl.viewport(0, 0, 1024, 1024);
 
-    const shadowDepthTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, shadowDepthTexture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texImage2D(
-        gl.TEXTURE_2D, // target
-        0, //level
-        gl.RGBA, // internal format
-        1024, // width
-        1024,  // height
-        0,  // border
-        gl.RGBA, // format
-        gl.UNSIGNED_BYTE, // type
-        null
-    );
-
-    const shadowFramebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFramebuffer);
-
-    var renderBuffer = gl.createRenderbuffer();
-    gl.bindRenderbuffer(gl.RENDERBUFFER, renderBuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 1024, 1024);
-
-    // bind the textures to the framebuffer
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, shadowDepthTexture, 0);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderBuffer);
-
+    // set vert buffer
     setupBuffer(false);
 
     world.render();
-    // return;
 
     /* render phase */
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
     currentProgram = renderProgram;
     gl.useProgram(renderProgram);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     gl.clearColor(113/255, 211/255, 244/255, 1.0);
     // Clear the color buffer with specified clear color
@@ -190,16 +165,16 @@ function render() {
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
 
-    camProps.viewScaling = [1, canvas.width/canvas.height];
-    gl.viewport(0, 0, canvas.width, canvas.height);
 
     // set transforms
+    camProps.viewScaling = [1, canvas.width/canvas.height];
     gl.uniform1f(gl.getUniformLocation(renderProgram, 'zRot'), camProps.zRot*Math.PI/180);
     gl.uniform1f(gl.getUniformLocation(renderProgram, 'pitch'), camProps.pitch*Math.PI/180);
     gl.uniform1f(gl.getUniformLocation(renderProgram, 'fov'), camProps.fov*Math.PI/180);
     gl.uniform1f(gl.getUniformLocation(renderProgram, 'zoom'), camProps.zoom);
     gl.uniform2fv(gl.getUniformLocation(renderProgram, 'viewScaling'), camProps.viewScaling);
 
+    // set textures
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1i(gl.getUniformLocation(renderProgram, 'textureSampler'), 0);
@@ -208,6 +183,7 @@ function render() {
     gl.bindTexture(gl.TEXTURE_2D, shadowDepthTexture);
     gl.uniform1i(gl.getUniformLocation(renderProgram, 'shadowSampler'), 1);
 
+    // set vert buffer
     setupBuffer(true);
 
     world.render();

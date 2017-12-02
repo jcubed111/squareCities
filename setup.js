@@ -166,7 +166,7 @@ function setup() {
     gl.attachShader(shadowProgram, makeShader(shadowFragmentSource, gl.FRAGMENT_SHADER));
     gl.linkProgram(shadowProgram);
 
-    // load the texture
+    // load the scene texture
     const i = new Image();
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -183,9 +183,42 @@ function setup() {
     }
     i.src = "texture.png";
 
+    /* make the buffer for all the verts */
     renderBuffer = gl.createBuffer();
 
+    /* make the texture and framebuffer for shadows */
+    shadowDepthTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, shadowDepthTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texImage2D(
+        gl.TEXTURE_2D, // target
+        0, //level
+        gl.RGBA, // internal format
+        1024, // width
+        1024,  // height
+        0,  // border
+        gl.RGBA, // format
+        gl.UNSIGNED_BYTE, // type
+        null
+    );
 
+    shadowFramebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFramebuffer);
+
+    shadowRenderBuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 1024, 1024);
+
+    // bind the textures to the framebuffer
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, shadowDepthTexture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowRenderBuffer);
+
+
+    /* the world */
+    world = new World();
+
+    /* controls */
     canvas.addEventListener('mousemove', function(e) {
         let f = (1.0 - e.clientY / canvas.height);
         f = (f - 0.5) * 1.2 + 0.5;
@@ -193,8 +226,6 @@ function setup() {
         camProps.pitch = -90 * f;
         // camProps.zRot = 180 * (e.clientX / canvas.width);
     });
-
-    world = new World();
 
     function zoomer(e) {
         const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
