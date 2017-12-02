@@ -11,6 +11,10 @@ class Renderable{
     	gl.bufferData(gl.ARRAY_BUFFER, this.floats, gl.DYNAMIC_DRAW);
     	gl.drawArrays(gl.TRIANGLES, 0, this.floats.length/8);
 	}
+
+	markDirty() {
+		this.floats = null;
+	}
 }
 
 class Intersection extends Renderable{
@@ -36,7 +40,19 @@ class Intersection extends Renderable{
 	}
 
 	generateVerts() {
-		return [];
+		if(this.roads.some(r => r.type != 1)) return [];
+
+		const xmin = this.xIndex * 10 - 45 - 1;
+		const xmax = this.xIndex * 10 - 45 + 1;
+		const ymin = this.yIndex * 10 - 45 - 1;
+		const ymax = this.yIndex * 10 - 45 + 1;
+
+		return building(
+	        new Vert(xmin, ymin, 0),
+	        new Vert(xmax, ymax, 0.1),
+			new TexSpec(0, 0, 0, 0, 149, 149, 149),
+			new TexSpec(3, 1, 4, 2),
+	    );
 	}
 }
 
@@ -60,8 +76,8 @@ class Road extends Renderable{
 		if(this.isNS) {
 			const xMin = -55 +  this.xIndex*10 + 10 - this.type;
 			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
-			const yMin = -55 +  this.yIndex*10 + 10;
-			const yMax = -55 +  this.yIndex*10 + 20;
+			const yMin = -55 +  this.yIndex*10 + 10 + this.type;
+			const yMax = -55 +  this.yIndex*10 + 20 - this.type;
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
@@ -70,8 +86,8 @@ class Road extends Renderable{
 				true
 			);
 		}else{
-			const xMin = -55 +  this.xIndex*10 + 10;
-			const xMax = -55 +  this.xIndex*10 + 20;
+			const xMin = -55 +  this.xIndex*10 + 10 + this.type;
+			const xMax = -55 +  this.xIndex*10 + 20 - this.type;
 			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
 			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
 			return building(
@@ -99,14 +115,27 @@ class Building extends Renderable{
 		return building(
 	        new Vert(this.x, this.y, 0),
 	        new Vert(this.x+this.dx, this.y+this.dy, 10),
-			new TexSpec(1, 0, 16, 1),
-			new TexSpec(0, 0, 0, 0, 0, 216, 0),
+			new TexSpec(0, 2, 1, 6),
+			new TexSpec(0, 0, 0, 0, 200, 190, 180),
 	    );
 	}
 }
 
 class Base extends Renderable{
 	generateVerts() {
+		const verts = [];
+		for(let x=0; x < 11; x++) {
+			for(let y=0; y < 11; y++) {
+				verts.push.apply(verts, square(
+					new Vert(x*10-55, y*10-55, 0, 13.25, 1.25),
+					new Vert(x*10-45, y*10-55, 0, 15.75, 1.25),
+					new Vert(x*10-45, y*10-45, 0, 15.75, 3.75),
+					new Vert(x*10-55, y*10-45, 0, 13.25, 3.75)
+				));
+			}
+		}
+		return verts;
+
 		return building(
 	        new Vert(-55, -55, -5),
 	        new Vert(55, 55, 0),
@@ -136,6 +165,7 @@ class World{
 		this.gridFilled = makeArray(minorWidth, minorHeight, () => false);
 
 		const nullRoad = new Road();
+		nullRoad.type = 0;
 
 		this.nsRoads = makeArray(10, 9, (x, y) => new Road(true, x, y)); // [x - 10][y - 9]
 		this.ewRoads = makeArray(9, 10, (x, y) => new Road(false, x, y)); // [x - 10][y - 9]
