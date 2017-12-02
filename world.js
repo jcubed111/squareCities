@@ -29,7 +29,7 @@ class Intersection extends Renderable{
 		this.eRoad = eRoad;
 		this.wRoad = wRoad;
 
-		this.roads = [nRoad, sRoad, eRoad, wRoad];
+		this.roads = [nRoad, eRoad, sRoad, wRoad];
 
 		this.nRoad.intersection1 = this;
 		this.eRoad.intersection1 = this;
@@ -40,8 +40,30 @@ class Intersection extends Renderable{
 	}
 
 	generateVerts() {
-		if(this.roads.some(r => r.type != 1)) return [];
+		const centerX = this.xIndex * 10 - 45;
+		const centerY = this.yIndex * 10 - 45;
 
+		const typeList = this.roads.map(r => r.type).join(''); // nesw
+		switch(typeList) {
+			case '0000':
+			case '0101':
+			case '1010':
+				return [];
+			case '1111':
+				return this.type1_4WayStop();
+			case '1100':
+				return objectToVertArray("type1turn", 2, centerX, centerY);
+			case '0110':
+				return objectToVertArray("type1turn", 1, centerX, centerY);
+			case '0011':
+				return objectToVertArray("type1turn", 0, centerX, centerY);
+			case '1001':
+				return objectToVertArray("type1turn", 3, centerX, centerY);
+			default: return [];
+		}
+	}
+
+	type1_4WayStop() {
 		const xmin = this.xIndex * 10 - 45 - 1;
 		const xmax = this.xIndex * 10 - 45 + 1;
 		const ymin = this.yIndex * 10 - 45 - 1;

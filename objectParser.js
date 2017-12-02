@@ -1,4 +1,4 @@
-function objectToVertArray(objectName) {
+function objectToVertArray(objectName, rot=0, translateX=0, translateY=0) {
 	const source = objectFiles[objectName];
 	const lines = source.split("\n");
 
@@ -17,6 +17,19 @@ function objectToVertArray(objectName) {
 		}else{
 			return;
 		}
+	});
+
+	// transform the verts
+	const cosR = Math.cos(rot*Math.PI/2);
+	const sinR = Math.sin(rot*Math.PI/2);
+	vertData.forEach(v => {
+		if(v == null) return;
+		[v[0], v[1]] = [
+			v[0]*cosR - v[1]*sinR,
+			v[0]*sinR + v[1]*cosR
+		];
+		v[0] += translateX;
+		v[1] += translateY;
 	});
 
 	const result = [];
