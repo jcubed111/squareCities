@@ -1,4 +1,15 @@
-var vs = `
+var posToShadowPos = `
+highp vec3 sunDirection = normalize(vec3(-1, 1, -1));
+highp vec3 posToShadowPos(highp vec3 pos) {
+    highp vec3 v = cross(sunDirection, vec3(0, 0, -1));
+    highp float c = dot(sunDirection, vec3(0, 0, -1));
+    highp mat3 vx = mat3(0, v.z, -v.y, -v.z, 0, v.x, v.y, -v.x, 0);
+    highp mat3 rot = mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) + vx + vx*vx*(1.0/(1.0 +c));
+    return rot * pos * vec3(0.01, 0.01, -0.01);
+}
+`;
+
+var renderVertexSource = `
 attribute vec4 pos;
 attribute vec4 color;
 attribute vec2 texCoord;
@@ -13,6 +24,8 @@ varying lowp vec4 vertColor;
 varying highp vec2 vertTexCoord;
 varying highp vec3 transformedPos;
 
+${posToShadowPos}
+
 void main() {
     float cosZ = cos(zRot);
     float sinZ = sin(zRot);
@@ -20,17 +33,18 @@ void main() {
                         -sinZ, cosZ, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1);
+    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
+
+    // pass the transformed pos to the fragment shader to do lighting on
+    transformedPos = gl_Position.xyz;
+
+    // pitch the camera
     float cosP = cos(pitch);
     float sinP = sin(pitch);
     mat4 pitchMat = mat4(1, 0, 0, 0,
                          0, cosP, sinP, 0,
                          0, -sinP, cosP, 0,
                          0, 0, 0, 1);
-    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
-
-    // pass the transformed pos to the fragment shader to do lighting on
-    transformedPos = gl_Position.xyz;
-
     gl_Position = pitchMat * gl_Position;
 
     // perspective transform
@@ -46,16 +60,52 @@ void main() {
 }
 `;
 
-var fs = `
+var shadowVertexSource = `
+attribute vec4 pos;
+uniform float zRot;
+
+varying highp float shadowZ;
+
+${posToShadowPos}
+
+void main() {
+    float cosZ = cos(zRot);
+    float sinZ = sin(zRot);
+    mat4 zRotMat = mat4(cosZ, sinZ, 0, 0,
+                        -sinZ, cosZ, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1);
+    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
+
+    gl_Position.xyz = posToShadowPos(gl_Position.xyz);
+
+    shadowZ = gl_Position.z * 0.5 + 0.5;
+}
+`;
+
+var renderFragmentSource = `
 #extension GL_OES_standard_derivatives : enable
 
 uniform sampler2D textureSampler;
+uniform sampler2D shadowSampler;
 
 varying lowp vec4 vertColor;
 varying highp vec2 vertTexCoord;
 varying highp vec3 transformedPos;
 
+${posToShadowPos}
+
 void main() {
+    highp vec3 shadowCoord = posToShadowPos(transformedPos);
+    shadowCoord.xyz *= 0.5;
+    shadowCoord.xyz += vec3(0.5, 0.5, 0.5);
+    highp vec4 texZ = texture2D(shadowSampler, shadowCoord.xy);
+    highp float z = dot(texZ, vec4(1.0, 1.0/256.0, 1.0/256.0/256.0, 1.0/256.0/256.0/256.0));
+    lowp float sunShadowFactor = 1.0;
+    if(z < shadowCoord.z - 0.005) {
+        sunShadowFactor = 0.0; // in shadow
+    }
+
     highp vec3 normal = normalize(cross(dFdx(transformedPos), dFdy(transformedPos)));
     gl_FragColor = vec4(0.0, 0.0, 0.0, vertColor.a);
 
@@ -65,12 +115,25 @@ void main() {
     }
 
     lowp vec3 sunDirection = normalize(vec3(-1, 1, -1));
-    highp float sunFac = dot(normal, -sunDirection);
+    highp float sunFac = dot(normal, -sunDirection) * sunShadowFactor;
     if(sunFac > 0.0) {
         gl_FragColor.rgb += sunFac * color.rgb * vec3(0.99, 0.98, 0.93) * 0.65;
     }
 
     gl_FragColor.rgb += color.rgb * vec3(0.89, 0.93, 0.97) * 0.6;
+}
+`;
+
+var shadowFragmentSource = `
+varying highp float shadowZ;
+
+void main() {
+    gl_FragColor = vec4(
+        shadowZ,
+        fract(shadowZ * 256.0),
+        fract(shadowZ * 256.0*256.0),
+        fract(shadowZ * 256.0*256.0*256.0)
+    );
 }
 `;
 
@@ -92,14 +155,16 @@ function setup() {
         }
         return s;
     }
-    const vertShader = makeShader(vs, gl.VERTEX_SHADER);
-    const fragShader = makeShader(fs, gl.FRAGMENT_SHADER);
 
-    program = gl.createProgram();
-    gl.attachShader(program, vertShader);
-    gl.attachShader(program, fragShader);
-    gl.linkProgram(program);
-    gl.useProgram(program);
+    renderProgram = gl.createProgram();
+    gl.attachShader(renderProgram, makeShader(renderVertexSource, gl.VERTEX_SHADER));
+    gl.attachShader(renderProgram, makeShader(renderFragmentSource, gl.FRAGMENT_SHADER));
+    gl.linkProgram(renderProgram);
+
+    shadowProgram = gl.createProgram();
+    gl.attachShader(shadowProgram, makeShader(shadowVertexSource, gl.VERTEX_SHADER));
+    gl.attachShader(shadowProgram, makeShader(shadowFragmentSource, gl.FRAGMENT_SHADER));
+    gl.linkProgram(shadowProgram);
 
     // load the texture
     const i = new Image();
@@ -107,7 +172,6 @@ function setup() {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
     i.onload = function() {
-        console.log("loaded");
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, i);
 
@@ -118,6 +182,8 @@ function setup() {
         gl.generateMipmap(gl.TEXTURE_2D);
     }
     i.src = "texture.png";
+
+    renderBuffer = gl.createBuffer();
 
 
     canvas.addEventListener('mousemove', function(e) {

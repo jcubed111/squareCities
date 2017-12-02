@@ -1,6 +1,8 @@
 var canvas;
 var gl;
-var program;
+var renderProgram;
+var shadowProgram;
+var currentProgram;
 var texture;
 var camProps = {
     zRot: 0.0,
@@ -10,3 +12,4 @@ var camProps = {
     zoom: 1.0,
 };
 var world;
+var renderBuffer;

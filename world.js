@@ -67,15 +67,20 @@ class Road{
 }
 
 class Building{
-	constructor(x, y, width, height) {
+	constructor(x, y, dx, dy) {
 		this.x = x;
 		this.y = y;
-		this.width = width;
-		this.height = height;
+		this.dx = dx;
+		this.dy = dy;
 	}
 
 	render() {
-
+		drawVerts(building(
+	        new Vert(this.x, this.y, 0),
+	        new Vert(this.x+this.dx, this.y+this.dy, 10),
+			new TexSpec(1, 0, 16, 1),
+			new TexSpec(0, 0, 0, 0, 0, 216, 0),
+	    ));
 	}
 }
 
@@ -122,7 +127,7 @@ class World{
 			return new Intersection(x, y, nRoad, sRoad, eRoad, wRoad);
 		});
 
-		this.buildings = [];
+		this.buildings = [new Building(0, 0, 2, 2)];
 		this.base = new Base();
 	}
 
