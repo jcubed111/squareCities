@@ -166,6 +166,7 @@ class Building extends Renderable{
 	}
 
 	generateVerts() {
+		return objectToVertArray("building");
 		return building(
 	        new Vert(this.x, this.y, 0),
 	        new Vert(this.x+this.dx, this.y+this.dy, 10),

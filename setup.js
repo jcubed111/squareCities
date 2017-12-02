@@ -102,7 +102,7 @@ void main() {
     highp vec4 texZ = texture2D(shadowSampler, shadowCoord.xy);
     highp float z = dot(texZ, vec4(1.0, 1.0/256.0, 1.0/256.0/256.0, 1.0/256.0/256.0/256.0));
     lowp float sunShadowFactor = 1.0;
-    if(z < shadowCoord.z - 0.005) {
+    if(shadowCoord.z - z > 0.002) {
         sunShadowFactor = 0.0; // in shadow
     }
 
@@ -195,8 +195,8 @@ function setup() {
         gl.TEXTURE_2D, // target
         0, //level
         gl.RGBA, // internal format
-        1024, // width
-        1024,  // height
+        shadowTexSize, // width
+        shadowTexSize,  // height
         0,  // border
         gl.RGBA, // format
         gl.UNSIGNED_BYTE, // type
@@ -208,7 +208,7 @@ function setup() {
 
     shadowRenderBuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 1024, 1024);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, shadowTexSize, shadowTexSize);
 
     // bind the textures to the framebuffer
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, shadowDepthTexture, 0);

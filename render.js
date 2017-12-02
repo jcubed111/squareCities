@@ -135,7 +135,7 @@ function render() {
     gl.useProgram(shadowProgram);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFramebuffer);
-    gl.viewport(0, 0, 1024, 1024);
+    gl.viewport(0, 0, shadowTexSize, shadowTexSize);
 
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

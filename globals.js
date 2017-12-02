@@ -17,3 +17,4 @@ var renderBuffer; // for vert info
 var shadowDepthTexture;
 var shadowFramebuffer;
 var shadowRenderBuffer;
+var shadowTexSize = 1024;
