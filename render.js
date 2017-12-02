@@ -190,7 +190,7 @@ function render() {
 }
 
 function step() {
-    camProps.zRot += 0.25;
+    camProps.zRot += 0.05;
     render();
     requestAnimationFrame(step);
 }

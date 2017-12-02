@@ -47,12 +47,66 @@ class Intersection extends Renderable{
 		const ymin = this.yIndex * 10 - 45 - 1;
 		const ymax = this.yIndex * 10 - 45 + 1;
 
-		return building(
+		const verts = building(
 	        new Vert(xmin, ymin, 0),
 	        new Vert(xmax, ymax, 0.1),
 			new TexSpec(0, 0, 0, 0, 149, 149, 149),
 			new TexSpec(3, 1, 4, 2),
 	    );
+
+	    // add stop signs
+	    verts.push.apply(verts, this.stopSign(xmin, ymin, false));
+	    verts.push.apply(verts, this.stopSign(xmin, ymax, true));
+	    verts.push.apply(verts, this.stopSign(xmax, ymax, false));
+	    verts.push.apply(verts, this.stopSign(xmax, ymin, true));
+
+	    return verts;
+	}
+
+	stopSign(x, y, alongXAxis) {
+		const height = 0.9;
+		const radius = 0.25;
+		const poleRadius = 0.02;
+		// returns verts to make a stop sign
+		const coords = [
+			[0.3, 0],
+			[0.7, 0],
+			[1, 0.3],
+			[1, 0.7],
+			[0.7, 1],
+			[0.3, 1],
+			[0, 0.7],
+			[0, 0.3],
+		];
+
+		const verts = coords.map(c => new Vert(
+			x + (alongXAxis ? radius*2*(c[0] - 0.5) : 0),
+			y + (!alongXAxis ? radius*2*(c[0] - 0.5) : 0),
+			height + radius*2*(c[1] - 0.5),
+			1+c[0],
+			3-c[1]
+		));
+
+		return [
+			verts[0], verts[1], verts[2],
+			verts[0], verts[2], verts[3],
+			verts[0], verts[3], verts[4],
+			verts[0], verts[4], verts[5],
+			verts[0], verts[5], verts[6],
+			verts[0], verts[5], verts[7],
+
+			verts[0], verts[7], verts[6],
+			verts[0], verts[6], verts[5],
+			verts[0], verts[5], verts[4],
+			verts[0], verts[4], verts[3],
+			verts[0], verts[3], verts[2],
+			verts[0], verts[2], verts[1],
+		].concat(building(
+			new Vert(x-poleRadius, y-poleRadius, 0),
+			new Vert(x+poleRadius, y+poleRadius, height-radius),
+			new TexSpec(0, 0, 0, 0, 220, 220, 220),
+			new TexSpec(0, 0, 0, 0, 220, 220, 220),
+		));
 	}
 }
 
