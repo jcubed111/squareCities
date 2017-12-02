@@ -96,16 +96,6 @@ varying highp vec3 transformedPos;
 ${posToShadowPos}
 
 void main() {
-    highp vec3 shadowCoord = posToShadowPos(transformedPos);
-    shadowCoord.xyz *= 0.5;
-    shadowCoord.xyz += vec3(0.5, 0.5, 0.5);
-    highp vec4 texZ = texture2D(shadowSampler, shadowCoord.xy);
-    highp float z = dot(texZ, vec4(1.0, 1.0/256.0, 1.0/256.0/256.0, 1.0/256.0/256.0/256.0));
-    lowp float sunShadowFactor = 1.0;
-    if(shadowCoord.z - z > 0.002) {
-        sunShadowFactor = 0.0; // in shadow
-    }
-
     highp vec3 normal = normalize(cross(dFdx(transformedPos), dFdy(transformedPos)));
     gl_FragColor = vec4(0.0, 0.0, 0.0, vertColor.a);
 
@@ -115,9 +105,28 @@ void main() {
     }
 
     lowp vec3 sunDirection = normalize(vec3(-1, 1, -1));
-    highp float sunFac = dot(normal, -sunDirection) * sunShadowFactor;
+    highp float sunFac = dot(normal, -sunDirection);
+
     if(sunFac > 0.0) {
-        gl_FragColor.rgb += sunFac * color.rgb * vec3(0.99, 0.98, 0.93) * 0.65;
+        // test for shadows
+        highp vec3 shadowCoord = posToShadowPos(transformedPos);
+        shadowCoord.xyz *= 0.5;
+        shadowCoord.xyz += vec3(0.5, 0.5, 0.5);
+
+        highp vec4 texZ = texture2D(shadowSampler, shadowCoord.xy);
+        highp float z = dot(texZ, vec4(1.0, 1.0/256.0, 1.0/256.0/256.0, 1.0/256.0/256.0/256.0));
+
+        lowp float sunShadowFactor = 1.0;
+        if(shadowCoord.z - z > 0.002) {
+            sunShadowFactor = 0.0; // in shadow
+        }
+
+        sunFac *= sunShadowFactor;
+
+        if(sunFac > 0.0) {
+            // if it's still > 0, add sunlight.
+            gl_FragColor.rgb += sunFac * color.rgb * vec3(0.99, 0.98, 0.93) * 0.65;
+        }
     }
 
     gl_FragColor.rgb += color.rgb * vec3(0.89, 0.93, 0.97) * 0.6;
@@ -224,7 +233,7 @@ function setup() {
         f = (f - 0.5) * 1.2 + 0.5;
         f = Math.min(1.0, Math.max(0.0, f));
         camProps.pitch = -90 * f;
-        // camProps.zRot = 180 * (e.clientX / canvas.width);
+        camProps.zRot = 360 * (e.clientX / canvas.width);
     });
 
     function zoomer(e) {

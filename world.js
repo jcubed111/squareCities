@@ -43,92 +43,59 @@ class Intersection extends Renderable{
 		const centerX = this.xIndex * 10 - 45;
 		const centerY = this.yIndex * 10 - 45;
 
-		const typeList = this.roads.map(r => r.type).join(''); // nesw
-		switch(typeList) {
+		var [rotation, config] = this.getConnectionConfig();
+
+		switch(config) {
 			case '0000':
-			case '0101':
 			case '1010':
 				return [];
 			case '1111':
-				return this.type1_4WayStop();
+				return objectToVertArray("type1_4WayStop", 2, centerX, centerY);
+			case '1110':
+				return objectToVertArray("type1_3WayStop", rotation, centerX, centerY);
 			case '1100':
-				return objectToVertArray("type1turn", 2, centerX, centerY);
-			case '0110':
-				return objectToVertArray("type1turn", 1, centerX, centerY);
-			case '0011':
-				return objectToVertArray("type1turn", 0, centerX, centerY);
-			case '1001':
-				return objectToVertArray("type1turn", 3, centerX, centerY);
+				return objectToVertArray("type1turn", rotation-1, centerX, centerY);
+			case '1000':
+				return objectToVertArray("type1_culdesac", rotation+1, centerX, centerY);
+
 			default: return [];
 		}
 	}
 
-	type1_4WayStop() {
-		const xmin = this.xIndex * 10 - 45 - 1;
-		const xmax = this.xIndex * 10 - 45 + 1;
-		const ymin = this.yIndex * 10 - 45 - 1;
-		const ymax = this.yIndex * 10 - 45 + 1;
+	getConnectionConfig() {
+		let typeList = this.roads.map(r => r.type).join(''); // nesw
+		let rotation = 0;
 
-		const verts = building(
-	        new Vert(xmin, ymin, 0),
-	        new Vert(xmax, ymax, 0.1),
-			new TexSpec(0, 0, 0, 0, 149, 149, 149),
-			new TexSpec(3, 1, 4, 2),
-	    );
-
-	    // add stop signs
-	    verts.push.apply(verts, this.stopSign(xmin, ymin, false));
-	    verts.push.apply(verts, this.stopSign(xmin, ymax, true));
-	    verts.push.apply(verts, this.stopSign(xmax, ymax, false));
-	    verts.push.apply(verts, this.stopSign(xmax, ymin, true));
-
-	    return verts;
+		// take the version of typelist such that if it were a number it'd be the biggest
+		function rot(type, n) {
+			return type.slice(n) + type.slice(0, n);
+		}
+		const rotations = [
+			[3, rot(typeList, 0)],
+			[2, rot(typeList, 1)],
+			[1, rot(typeList, 2)],
+			[0, rot(typeList, 3)],
+		];
+		rotations.sort((a, b) => +b[1] - a[1]);
+		return rotations[0];
 	}
 
-	stopSign(x, y, alongXAxis) {
-		const height = 0.9;
-		const radius = 0.25;
-		const poleRadius = 0.02;
-		// returns verts to make a stop sign
-		const coords = [
-			[0.3, 0],
-			[0.7, 0],
-			[1, 0.3],
-			[1, 0.7],
-			[0.7, 1],
-			[0.3, 1],
-			[0, 0.7],
-			[0, 0.3],
-		];
+	getSize() {
+		var [rotation, config] = this.getConnectionConfig();
 
-		const verts = coords.map(c => new Vert(
-			x + (alongXAxis ? radius*2*(c[0] - 0.5) : 0),
-			y + (!alongXAxis ? radius*2*(c[0] - 0.5) : 0),
-			height + radius*2*(c[1] - 0.5),
-			1+c[0],
-			3-c[1]
-		));
+		switch(config) {
+			case '0000':
+			case '1010':
+				return 0;
+			case '1111':
+			case '1110':
+			case '1100':
+				return 1;
+			case '1000':
+				return 2;
 
-		return [
-			verts[0], verts[1], verts[2],
-			verts[0], verts[2], verts[3],
-			verts[0], verts[3], verts[4],
-			verts[0], verts[4], verts[5],
-			verts[0], verts[5], verts[6],
-			verts[0], verts[5], verts[7],
-
-			verts[0], verts[7], verts[6],
-			verts[0], verts[6], verts[5],
-			verts[0], verts[5], verts[4],
-			verts[0], verts[4], verts[3],
-			verts[0], verts[3], verts[2],
-			verts[0], verts[2], verts[1],
-		].concat(building(
-			new Vert(x-poleRadius, y-poleRadius, 0),
-			new Vert(x+poleRadius, y+poleRadius, height-radius),
-			new TexSpec(0, 0, 0, 0, 220, 220, 220),
-			new TexSpec(0, 0, 0, 0, 220, 220, 220),
-		));
+			default: return 0;
+		}
 	}
 }
 
@@ -140,20 +107,23 @@ class Road extends Renderable{
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
 
-		this.type = 1; // 0 - no road, 1 - small, 2 - medium, 3 - highway
+		this.type = +(Math.random() < 0.5); // 0 - no road, 1 - small, 2 - medium, 3 - highway
 		this.intersection0 = null; // the intersection to the north or east
 		this.intersection1 = null; // the intersection to the south or west
 	}
 
 	generateVerts() {
-		if(this.type == 0) return;
+		if(this.type == 0) return [];
 		const roadZ = 0.1;
+
+		const size0 = this.intersection0.getSize();
+		const size1 = this.intersection1.getSize();
 
 		if(this.isNS) {
 			const xMin = -55 +  this.xIndex*10 + 10 - this.type;
 			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
-			const yMin = -55 +  this.yIndex*10 + 10 + this.type;
-			const yMax = -55 +  this.yIndex*10 + 20 - this.type;
+			const yMin = -55 +  this.yIndex*10 + 10 + size1;
+			const yMax = -55 +  this.yIndex*10 + 20 - size0;
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
@@ -162,8 +132,8 @@ class Road extends Renderable{
 				true
 			);
 		}else{
-			const xMin = -55 +  this.xIndex*10 + 10 + this.type;
-			const xMax = -55 +  this.xIndex*10 + 20 - this.type;
+			const xMin = -55 +  this.xIndex*10 + 10 + size1;
+			const xMax = -55 +  this.xIndex*10 + 20 - size0;
 			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
 			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
 			return building(
