@@ -124,6 +124,16 @@ class Intersection extends Renderable{
 			default: return +config[0];
 		}
 	}
+
+	regen() {
+		this.markDirty();
+		this.roads.forEach(r => r.markDirty());
+	}
+
+	setType(t) {
+		this.type = t;
+		this.regen();
+	}
 }
 
 class Road extends Renderable{
@@ -134,7 +144,7 @@ class Road extends Renderable{
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
 
-		this.type = Math.floor(Math.random() * 3); // 0 - no road, 1 - small, 2 - medium, 3 - highway
+		this.type = 0; // 0 - no road, 1 - small, 2 - medium, 3 - highway
 		this.intersection0 = null; // the intersection to the north or east
 		this.intersection1 = null; // the intersection to the south or west
 	}
@@ -177,6 +187,13 @@ class Road extends Renderable{
 				false
 			);
 		}
+	}
+
+	setType(t) {
+		this.type = t;
+		this.markDirty();
+		this.intersection0.regen();
+		this.intersection1.regen();
 	}
 }
 
