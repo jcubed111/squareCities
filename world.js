@@ -57,6 +57,8 @@ class Intersection extends Renderable{
 				return objectToVertArray("type1turn", rotation-1, centerX, centerY);
 			case '1000':
 				return objectToVertArray("type1_culdesac", rotation+1, centerX, centerY);
+			case '2121':
+				return objectToVertArray("type2_crossing_type1", rotation, centerX, centerY);
 
 			default: return [];
 		}
@@ -86,15 +88,17 @@ class Intersection extends Renderable{
 		switch(config) {
 			case '0000':
 			case '1010':
+			case '2020':
 				return 0;
 			case '1111':
 			case '1110':
 			case '1100':
 				return 1;
 			case '1000':
+			case '2121':
 				return 2;
 
-			default: return 0;
+			default: return +config[0];
 		}
 	}
 }
@@ -107,7 +111,7 @@ class Road extends Renderable{
 		this.xIndex = xIndex;
 		this.yIndex = yIndex;
 
-		this.type = +(Math.random() < 0.5); // 0 - no road, 1 - small, 2 - medium, 3 - highway
+		this.type = Math.floor(Math.random() * 3); // 0 - no road, 1 - small, 2 - medium, 3 - highway
 		this.intersection0 = null; // the intersection to the north or east
 		this.intersection1 = null; // the intersection to the south or west
 	}
@@ -119,6 +123,12 @@ class Road extends Renderable{
 		const size0 = this.intersection0.getSize();
 		const size1 = this.intersection1.getSize();
 
+		const texBySize = [
+			null,
+			new TexSpec(0, 1, 3, 2),
+			new TexSpec(6, 2, 9, 4),
+		];
+
 		if(this.isNS) {
 			const xMin = -55 +  this.xIndex*10 + 10 - this.type;
 			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
@@ -128,7 +138,7 @@ class Road extends Renderable{
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
 				new TexSpec(0, 0, 0, 0, 149, 149, 149),
-				new TexSpec(0, 1, 3, 2),
+				texBySize[this.type],
 				true
 			);
 		}else{
@@ -140,7 +150,7 @@ class Road extends Renderable{
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
 				new TexSpec(0, 0, 0, 0, 149, 149, 149),
-				new TexSpec(0, 1, 3, 2),
+				texBySize[this.type],
 				false
 			);
 		}
