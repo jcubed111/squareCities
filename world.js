@@ -48,9 +48,11 @@ class Intersection extends Renderable{
 		switch(config) {
 			case '0000':
 			case '1010':
+			case '2020':
+			case '3030':
 				return [];
 			case '1111':
-				return objectToVertArray("inter1111", 2, centerX, centerY);
+				return objectToVertArray("inter1111", 0, centerX, centerY);
 			case '1110':
 				return objectToVertArray("inter1110", rotation, centerX, centerY);
 			case '1100':
@@ -59,6 +61,22 @@ class Intersection extends Renderable{
 				return objectToVertArray("inter1000", rotation+1, centerX, centerY);
 			case '2121':
 				return objectToVertArray("inter2121", rotation, centerX, centerY);
+			case '2222':
+				return objectToVertArray("inter2222", 0, centerX, centerY);
+			case '2221':
+				return objectToVertArray("inter2221", rotation+1, centerX, centerY);
+			case '2211':
+				return objectToVertArray("inter2211", rotation+2, centerX, centerY);
+			case '2111':
+				return objectToVertArray("inter2111", rotation-1, centerX, centerY);
+			case '2220':
+				return objectToVertArray("inter2220", rotation-2, centerX, centerY);
+			case '2200':
+				return objectToVertArray("inter2200", rotation-2, centerX, centerY);
+			case '2101':
+				return objectToVertArray("inter2101", rotation, centerX, centerY);
+			case '2120':
+				return objectToVertArray("inter2120", rotation, centerX, centerY);
 
 			default: return [];
 		}
@@ -96,6 +114,11 @@ class Intersection extends Renderable{
 				return 1;
 			case '1000':
 			case '2121':
+			case '2222':
+			case '2200':
+			case '2221':
+			case '2211':
+			case '2111':
 				return 2;
 
 			default: return +config[0];
