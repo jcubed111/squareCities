@@ -107,6 +107,7 @@ class Intersection extends Renderable{
 			case '0000':
 			case '1010':
 			case '2020':
+			case '3030':
 				return 0;
 			case '1111':
 			case '1110':
@@ -120,6 +121,8 @@ class Intersection extends Renderable{
 			case '2211':
 			case '2111':
 				return 2;
+			case '3300':
+				return 3;
 
 			default: return +config[0];
 		}
@@ -151,7 +154,7 @@ class Road extends Renderable{
 
 	generateVerts() {
 		if(this.type == 0) return [];
-		const roadZ = 0.1;
+		const roadZ = this.type == 3 ? 2.0 : 0.1;
 
 		const size0 = this.intersection0.getSize();
 		const size1 = this.intersection1.getSize();
@@ -160,6 +163,14 @@ class Road extends Renderable{
 			null,
 			new TexSpec(0, 1, 3, 2),
 			new TexSpec(6, 2, 9, 4),
+			new TexSpec(12.5, 6, 15.5, 9),
+		];
+
+		const sideBySize = [
+			null,
+			new TexSpec(0, 0, 0, 0, 149, 149, 149),
+			new TexSpec(0, 0, 0, 0, 149, 149, 149),
+			new TexSpec(8, 1, 9, 2),
 		];
 
 		if(this.isNS) {
@@ -170,7 +181,7 @@ class Road extends Renderable{
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
-				new TexSpec(0, 0, 0, 0, 149, 149, 149),
+				sideBySize[this.type],
 				texBySize[this.type],
 				true
 			);
@@ -182,7 +193,7 @@ class Road extends Renderable{
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
-				new TexSpec(0, 0, 0, 0, 149, 149, 149),
+				sideBySize[this.type],
 				texBySize[this.type],
 				false
 			);
@@ -253,6 +264,12 @@ function makeArray(w, h, valFunction) {
 	return ret;
 }
 
+var doWaits = true;
+async function wait() {
+	if(!doWaits) return;
+	await new Promise(resolve => setTimeout(resolve, 100));
+}
+
 class World{
 	constructor() {
 		const minorWidth = 110;
@@ -288,6 +305,11 @@ class World{
 	}
 
 	async generate() {
-
+		for(let i=0; i<this.nsRoads.length; i++) {
+			for(let j=0; j<this.nsRoads[i].length; j++) {
+				this.nsRoads[i][j].setType(i%4);
+				await wait();
+			}
+		}
 	}
 }
