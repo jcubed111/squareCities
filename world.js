@@ -50,15 +50,15 @@ class Intersection extends Renderable{
 			case '1010':
 				return [];
 			case '1111':
-				return objectToVertArray("type1_4WayStop", 2, centerX, centerY);
+				return objectToVertArray("inter1111", 2, centerX, centerY);
 			case '1110':
-				return objectToVertArray("type1_3WayStop", rotation, centerX, centerY);
+				return objectToVertArray("inter1110", rotation, centerX, centerY);
 			case '1100':
-				return objectToVertArray("type1turn", rotation-1, centerX, centerY);
+				return objectToVertArray("inter1100", rotation-1, centerX, centerY);
 			case '1000':
-				return objectToVertArray("type1_culdesac", rotation+1, centerX, centerY);
+				return objectToVertArray("inter1000", rotation+1, centerX, centerY);
 			case '2121':
-				return objectToVertArray("type2_crossing_type1", rotation, centerX, centerY);
+				return objectToVertArray("inter2121", rotation, centerX, centerY);
 
 			default: return [];
 		}
