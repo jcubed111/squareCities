@@ -305,6 +305,21 @@ class Tree extends Renderable{
 	}
 }
 
+class Factory extends Renderable{
+	constructor(x, y, size) {
+		super();
+
+		this.x = x;
+		this.y = y;
+		this.size = size;
+		this.rot = rand(0, 3);
+	}
+
+	generateVerts() {
+		return objectToVertArray("factory"+this.size, this.rot, this.x+this.size/2, this.y+this.size/2);
+	}
+}
+
 class Base extends Renderable{
 	constructor(world) {
 		super();
@@ -574,6 +589,7 @@ class World{
 				this.buildings.push(new House(x, y, size));
 				break;
 			case 2: // ind
+				this.buildings.push(new Factory(x, y, size));
 				break;
 			case 3: // com
 				const centerness = Math.pow(1 - Math.sqrt(x*x+y*y)/64, 4);
