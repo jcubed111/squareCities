@@ -7,9 +7,9 @@ var texture;
 var camProps = {
     zRot: 0.0,
     viewScaling: [1.0, 1.0],
-    pitch: -70,
+    pitch: -65,
     fov: 60,
-    zoom: 1.0,
+    zoom: 1.4142135623730951,
 };
 var world;
 var renderBuffer; // for vert info
@@ -19,5 +19,8 @@ var shadowFramebuffer;
 var shadowRenderBuffer;
 var shadowTexSize = 1024*2;
 
-var manualControl = true;
-var doWaits = false;
+var manualControl = false;
+var doWaits = true;
+var autoRotSpeed =  0.005;
+
+var startTime = performance.now();

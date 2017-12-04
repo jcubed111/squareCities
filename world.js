@@ -346,7 +346,11 @@ class Base extends Renderable{
 				));
 			}
 		}
-		return verts;
+		return verts.concat(buildingNoRoof(
+			new Vert(-55, -55, -5),
+	        new Vert(55, 55, 0),
+			new TexSpec(1, 0, 16, 1),
+		));
 	}
 }
 
@@ -361,10 +365,17 @@ function makeArray(w, h, valFunction) {
 	return ret;
 }
 
+var waitTimeout = false;
 async function wait(f = 1) {
 	if(!doWaits) return;
-	await new Promise(resolve => setTimeout(resolve, f*100));
+	await new Promise(resolve => waitTimeout = setTimeout(resolve, f*100));
 }
+
+function cancelWait() {
+	if(waitTimeout !== false) {
+		clearTimeout(waitTimeout);
+	}
+};
 
 function rand(min, max) {
 	return Math.floor(Math.random()*(max-min+1)) + min;
@@ -578,9 +589,9 @@ class World{
 				const size = rand(1, maxSize);
 				this.addBuilding(x-55, y-55, size, zoneType);
 				this.fillGround(x, y, size);
-				await wait(0);
 			}
 		}
+		await wait(1);
 	}
 
 	addBuilding(x, y, size, zoneType) {
@@ -593,7 +604,7 @@ class World{
 				break;
 			case 3: // com
 				const centerness = Math.pow(1 - Math.sqrt(x*x+y*y)/64, 4);
-				const height = 2 + rand(centerness*15, centerness*40);
+				const height = 1 + rand(centerness*15, 2 + centerness*40);
 				this.buildings.push(new Building(x, y, size, size, height));
 				break;
 			case 4: // green

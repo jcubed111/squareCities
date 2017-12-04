@@ -1,3 +1,5 @@
+var zTranslate = "-10.0";
+
 var posToShadowPos = `
 highp vec3 sunDirection = normalize(vec3(-1, 1, -1));
 highp vec3 posToShadowPos(highp vec3 pos) {
@@ -33,7 +35,7 @@ void main() {
                         -sinZ, cosZ, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1);
-    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
+    gl_Position = zRotMat * (pos + vec4(0, 0, ${zTranslate}, 0));
 
     // pass the transformed pos to the fragment shader to do lighting on
     transformedPos = gl_Position.xyz;
@@ -75,7 +77,7 @@ void main() {
                         -sinZ, cosZ, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1);
-    gl_Position = zRotMat * (pos + vec4(0, 0, -25.0, 0));
+    gl_Position = zRotMat * (pos + vec4(0, 0, ${zTranslate}, 0));
 
     gl_Position.xyz = posToShadowPos(gl_Position.xyz);
 
@@ -179,15 +181,11 @@ function setup() {
     const i = new Image();
     texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([26, 223, 26, 255]));
     i.onload = function() {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, i);
 
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.generateMipmap(gl.TEXTURE_2D);
     }
     i.src = "texture.png";
@@ -237,10 +235,25 @@ function setup() {
         camProps.zRot = 360 * (e.clientX / canvas.width);
     });
 
-    window.addEventListener('keydown', function(e) {
-        if(e.keyCode != 32) return;
+    window.addEventListener('click', function(e) {
+        // if(e.keyCode != 32) return;
+        cancelWait();
+        doWaits = true;
         world.reset();
         world.generate();
+    });
+
+    window.addEventListener('keypress', function(e) {
+        if(e.keyCode != 32) return;
+        cancelWait();
+        doWaits = false;
+        world.reset();
+        world.generate();
+    });
+
+    window.addEventListener("resize", function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     });
 
     function zoomer(e) {
@@ -249,6 +262,7 @@ function setup() {
         const f = delta > 0 ? Math.SQRT2 : Math.SQRT1_2;
 
         camProps.zoom *= f;
+        camProps.zoom = Math.min(11.313708498984763, Math.max(0.7071067811865477, camProps.zoom));
 
     }
     canvas.addEventListener("mousewheel", zoomer, false);

@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link href="https://fonts.googleapis.com/css?family=Lato:100" rel="stylesheet" />
     <style>
+        html{
+            background: rgba(113, 211, 244, 1.0);
+            background-image: linear-gradient(to bottom, rgb(113, 211, 244), #baeeff);
+            height: 100%;
+        }
+
         body{
             padding: 0;
             margin: 0;
             overflow: hidden;
+            background: rgba(113, 211, 244, 1.0);
+            background-image: linear-gradient(180deg, rgb(113, 211, 244), #baeeff);
+            height: 100%;
         }
 
         canvas{
@@ -14,6 +24,19 @@
             left: 0;
             right: 0;
             bottom: 0;
+            background: transparent;
+            z-index: 5;
+        }
+
+        h1{
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 100px;
+            color: #a2e5fc;
+            font-family: Lato, serif;
+            margin: 50px 83px;
+            z-index: 0;
         }
     </style>
 
@@ -32,6 +55,7 @@
 </head>
 <body>
     <canvas id="view"></canvas>
+    <h1>Square Cities</h1>
     <script src="globals.js"></script>
     <script src="setup.js"></script>
     <script src="vert.js"></script>

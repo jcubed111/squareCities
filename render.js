@@ -83,6 +83,36 @@ function building(vmin, vmax, wallTex, roofTex, rotateRoofTex = false) {
     ].reduce((a, b) => a.concat(b), []);
 }
 
+function buildingNoRoof(vmin, vmax, wallTex) {
+    return [
+        // walls
+        square(
+            new Vert(vmin.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmax.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmax.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmin.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmax.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmax.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmax.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmax.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmax.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmin.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmin.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmax.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+        square(
+            new Vert(vmin.x, vmax.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymax),
+            new Vert(vmin.x, vmin.y, vmin.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymax),
+            new Vert(vmin.x, vmin.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmax, wallTex.ymin),
+            new Vert(vmin.x, vmax.y, vmax.z, wallTex.r, wallTex.g, wallTex.b, wallTex.xmin, wallTex.ymin),
+        ),
+    ].reduce((a, b) => a.concat(b), []);
+}
+
 function drawVerts(verts) {
     const floats = verts.map(v => v.toArray()).reduce((a, b) => a.concat(b), []);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floats), gl.DYNAMIC_DRAW);
@@ -158,7 +188,7 @@ function render() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    gl.clearColor(113/255, 211/255, 244/255, 1.0);
+    gl.clearColor(0, 0, 0, 0.0);
     // Clear the color buffer with specified clear color
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -191,7 +221,7 @@ function render() {
 
 function step() {
     if(!manualControl) {
-        camProps.zRot += 0.1;
+        camProps.zRot = autoRotSpeed * (performance.now() - startTime);
     }
     render();
     requestAnimationFrame(step);
