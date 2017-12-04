@@ -82,6 +82,7 @@ class Intersection extends Renderable{
 			case '3131':
 				return objectToVertArray("inter3131", rotation, centerX, centerY);
 			case '3232':
+			case '3230':
 				return objectToVertArray("inter3232", rotation, centerX, centerY);
 
 			default: return [];
@@ -132,6 +133,7 @@ class Intersection extends Renderable{
 			case '3131':
 				return 3;
 			case '3232':
+			case '3230':
 				return 7;
 
 			default: return +config[0];
@@ -146,6 +148,15 @@ class Intersection extends Renderable{
 	setType(t) {
 		this.type = t;
 		this.regen();
+	}
+
+	convertTo3131() {
+		// convert form 3130 to 3131
+		this.roads.forEach(r => {
+			if(r.type == 0) {
+				r.setType(1);
+			}
+		})
 	}
 }
 
@@ -213,8 +224,21 @@ class Road extends Renderable{
 	setType(t) {
 		this.type = t;
 		this.markDirty();
+
+		if(this.intersection0.getConnectionConfig()[1] == "3130") {
+			this.intersection0.convertTo3131();
+		}
+		if(this.intersection1.getConnectionConfig()[1] == "3130") {
+			this.intersection1.convertTo3131();
+		}
+
 		this.intersection0.regen();
 		this.intersection1.regen();
+	}
+
+	mustBe0() {
+		return this.intersection0.getConnectionConfig()[1] == "3300" ||
+			this.intersection1.getConnectionConfig()[1] == "3300";
 	}
 }
 
@@ -275,9 +299,9 @@ function makeArray(w, h, valFunction) {
 }
 
 var doWaits = true;
-async function wait() {
+async function wait(f = 1) {
 	if(!doWaits) return;
-	await new Promise(resolve => setTimeout(resolve, 100));
+	await new Promise(resolve => setTimeout(resolve, f*100));
 }
 
 function rand(min, max) {
@@ -330,14 +354,63 @@ class World{
 
 	async generate() {
 		/* 1. Add highways */
-		this.addHighway(rand(3, 8), rand(3, 8), randBool(), randBool());
+		const highwayX = rand(4, 7);
+		const highwayY = rand(4, 7);
+		await this.addHighway(highwayX, highwayY, randBool(), randBool());
 
-		// for(let i=0; i<this.nsRoads.length; i++) {
-		// 	for(let j=0; j<this.nsRoads[i].length; j++) {
-		// 		this.nsRoads[i][j].setType(0);
-		// 		await wait();
-		// 	}
-		// }
+		/* 2. Add big roads */
+		const bigRoadProb = 0.4;
+
+		for(let y=2; y<9; y++) {
+			if(y != highwayY && randBool(bigRoadProb)) {
+				await this.addHorizontalRoad(y);
+				y++; // skip the next one to avoid weird highway ramps
+			}
+		}
+
+		for(let x=2; x<9; x++) {
+			if(x != highwayX && randBool(bigRoadProb)) {
+				await this.addVerticalRoad(x);
+				x++; // skip the next one to avoid weird highway ramps
+			}
+		}
+
+		/* 3. Fill in the smaller roads */
+		const smallRoadSkipProb = 0.15;
+
+		for(let i=1; i<11; i++) {
+			for(let j=1; j<10; j++) {
+				const r = this.nsRoads[i][j];
+				if(i == 1 || i == 10) {
+					// pass
+				} else if(
+					randBool(smallRoadSkipProb)
+					|| r.type != 0
+					|| r.mustBe0()
+				) {
+					continue;
+				}
+				r.setType(1);
+				await wait(0.5);
+			}
+		}
+
+		for(let j=1; j<11; j++) {
+			for(let i=1; i<10; i++) {
+				const r = this.ewRoads[i][j];
+				if(j == 1 || j == 10) {
+					// pass
+				} else if(
+					randBool(smallRoadSkipProb)
+					|| r.type != 0
+					|| r.mustBe0()
+				) {
+					continue;
+				}
+				r.setType(1);
+				await wait(0.5);
+			}
+		}
 	}
 
 	async addHighway(x, y, xflipped, yflipped) {
@@ -363,6 +436,20 @@ class World{
 				this.ewRoads[i][y].setType(3);
 				await wait();
 			}
+		}
+	}
+
+	async addHorizontalRoad(y) {
+		for(let i=1; i<10; i++) {
+			this.ewRoads[i][y].setType(2);
+			await wait();
+		}
+	}
+
+	async addVerticalRoad(x) {
+		for(let i=1; i<10; i++) {
+			this.nsRoads[x][i].setType(2);
+			await wait();
 		}
 	}
 }
