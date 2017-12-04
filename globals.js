@@ -18,3 +18,5 @@ var shadowDepthTexture;
 var shadowFramebuffer;
 var shadowRenderBuffer;
 var shadowTexSize = 1024*2;
+
+var manualControl = true;

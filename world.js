@@ -52,7 +52,11 @@ class Intersection extends Renderable{
 			case '3030':
 				return [];
 			case '1111':
-				return objectToVertArray("inter1111", 0, centerX, centerY);
+				if(this.type == 0) {
+					return objectToVertArray("inter1111", 0, centerX, centerY);
+				}else{
+					return objectToVertArray("roundabout", 0, centerX, centerY);
+				}
 			case '1110':
 				return objectToVertArray("inter1110", rotation, centerX, centerY);
 			case '1100':
@@ -118,6 +122,7 @@ class Intersection extends Renderable{
 			case '3000':
 				return 0;
 			case '1111':
+				return this.type == 0 ? 1 : 3; // roundabouts
 			case '1110':
 			case '1100':
 				return 1;
@@ -409,6 +414,21 @@ class World{
 				}
 				r.setType(1);
 				await wait(0.5);
+			}
+		}
+
+		/* 4. Add roundabouts */
+		const roundaboutMaxProb = 1.0;
+		for(let i=1; i<10; i++) {
+			for(let j=1; j<10; j++) {
+				const inter = this.intersections[i][j];
+				if(inter.getConnectionConfig()[1] == "1111") {
+					const prob = Math.max(Math.abs(5 - i), Math.abs(5 - j)) / 4 * roundaboutMaxProb;
+					if(randBool(prob)) {
+						inter.setType(1);
+						await wait(0.5);
+					}
+				}
 			}
 		}
 	}

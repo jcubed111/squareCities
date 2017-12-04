@@ -229,6 +229,7 @@ function setup() {
 
     /* controls */
     canvas.addEventListener('mousemove', function(e) {
+        if(!manualControl) return;
         let f = (1.0 - e.clientY / canvas.height);
         f = (f - 0.5) * 1.2 + 0.5;
         f = Math.min(1.0, Math.max(0.0, f));
