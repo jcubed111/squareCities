@@ -232,8 +232,14 @@ function setup() {
         let f = (1.0 - e.clientY / canvas.height);
         f = (f - 0.5) * 1.2 + 0.5;
         f = Math.min(1.0, Math.max(0.0, f));
-        camProps.pitch = -90 * f;
-        camProps.zRot = 360 * (e.clientX / canvas.width);
+        // camProps.pitch = -90 * f;
+        // camProps.zRot = 360 * (e.clientX / canvas.width);
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if(e.keyCode != 32) return;
+        world.reset();
+        world.generate();
     });
 
     function zoomer(e) {

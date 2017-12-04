@@ -40,8 +40,8 @@ class Intersection extends Renderable{
 	}
 
 	generateVerts() {
-		const centerX = this.xIndex * 10 - 45;
-		const centerY = this.yIndex * 10 - 45;
+		const centerX = this.xIndex * 10 - 55;
+		const centerY = this.yIndex * 10 - 55;
 
 		var [rotation, config] = this.getConnectionConfig();
 
@@ -77,6 +77,12 @@ class Intersection extends Renderable{
 				return objectToVertArray("inter2101", rotation, centerX, centerY);
 			case '2120':
 				return objectToVertArray("inter2120", rotation, centerX, centerY);
+			case '3300':
+				return objectToVertArray("inter3300", rotation, centerX, centerY);
+			case '3131':
+				return objectToVertArray("inter3131", rotation, centerX, centerY);
+			case '3232':
+				return objectToVertArray("inter3232", rotation, centerX, centerY);
 
 			default: return [];
 		}
@@ -108,6 +114,7 @@ class Intersection extends Renderable{
 			case '1010':
 			case '2020':
 			case '3030':
+			case '3000':
 				return 0;
 			case '1111':
 			case '1110':
@@ -122,7 +129,10 @@ class Intersection extends Renderable{
 			case '2111':
 				return 2;
 			case '3300':
+			case '3131':
 				return 3;
+			case '3232':
+				return 7;
 
 			default: return +config[0];
 		}
@@ -174,10 +184,10 @@ class Road extends Renderable{
 		];
 
 		if(this.isNS) {
-			const xMin = -55 +  this.xIndex*10 + 10 - this.type;
-			const xMax = -55 +  this.xIndex*10 + 10 + this.type;
-			const yMin = -55 +  this.yIndex*10 + 10 + size1;
-			const yMax = -55 +  this.yIndex*10 + 20 - size0;
+			const xMin = -65 +  this.xIndex*10 + 10 - this.type;
+			const xMax = -65 +  this.xIndex*10 + 10 + this.type;
+			const yMin = -65 +  this.yIndex*10 + 10 + size1;
+			const yMax = -65 +  this.yIndex*10 + 20 - size0;
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
@@ -186,10 +196,10 @@ class Road extends Renderable{
 				true
 			);
 		}else{
-			const xMin = -55 +  this.xIndex*10 + 10 + size1;
-			const xMax = -55 +  this.xIndex*10 + 20 - size0;
-			const yMin = -55 +  this.yIndex*10 + 10 - this.type;
-			const yMax = -55 +  this.yIndex*10 + 10 + this.type;
+			const xMin = -65 +  this.xIndex*10 + 10 + size1;
+			const xMax = -65 +  this.xIndex*10 + 20 - size0;
+			const yMin = -65 +  this.yIndex*10 + 10 - this.type;
+			const yMax = -65 +  this.yIndex*10 + 10 + this.type;
 			return building(
 				new Vert(xMin, yMin, 0),
 				new Vert(xMax, yMax, roadZ),
@@ -270,30 +280,17 @@ async function wait() {
 	await new Promise(resolve => setTimeout(resolve, 100));
 }
 
+function rand(min, max) {
+	return Math.floor(Math.random()*(max-min+1)) + min;
+}
+
+function randBool(p=0.5) {
+	return Math.random() < p;
+}
+
 class World{
 	constructor() {
-		const minorWidth = 110;
-		const minorHeight = 110;
-
-		// grid used when generating buildings
-		this.gridFilled = makeArray(minorWidth, minorHeight, () => false);
-
-		const nullRoad = new Road();
-		nullRoad.type = 0;
-
-		this.nsRoads = makeArray(10, 9, (x, y) => new Road(true, x, y)); // [x - 10][y - 9]
-		this.ewRoads = makeArray(9, 10, (x, y) => new Road(false, x, y)); // [x - 10][y - 9]
-		this.intersections = makeArray(10, 10, (x, y) => {
-			const nRoad = y == 9 ? nullRoad : this.nsRoads[x][y];
-			const sRoad = y == 0 ? nullRoad : this.nsRoads[x][y-1];
-			const eRoad = x == 9 ? nullRoad : this.ewRoads[x][y];
-			const wRoad = x == 0 ? nullRoad : this.ewRoads[x-1][y];
-
-			return new Intersection(x, y, nRoad, sRoad, eRoad, wRoad);
-		});
-
-		this.buildings = [new Building(0, 0, 2, 2)];
-		this.base = new Base();
+		this.reset();
 	}
 
 	render() {
@@ -304,10 +301,66 @@ class World{
 		this.buildings.forEach(b => b.render());
 	}
 
+	reset() {
+		const minorWidth = 110;
+		const minorHeight = 110;
+
+		const interMax = 12;
+
+		// grid used when generating buildings
+		this.gridFilled = makeArray(minorWidth, minorHeight, () => false);
+
+		const nullRoad = new Road();
+		nullRoad.type = 0;
+
+		this.nsRoads = makeArray(interMax, interMax-1, (x, y) => new Road(true, x, y)); // [x - 10][y - 9]
+		this.ewRoads = makeArray(interMax-1, interMax, (x, y) => new Road(false, x, y)); // [x - 10][y - 9]
+		this.intersections = makeArray(interMax, interMax, (x, y) => {
+			const nRoad = y == interMax-1 ? nullRoad : this.nsRoads[x][y];
+			const sRoad = y == 0 ? nullRoad : this.nsRoads[x][y-1];
+			const eRoad = x == interMax-1 ? nullRoad : this.ewRoads[x][y];
+			const wRoad = x == 0 ? nullRoad : this.ewRoads[x-1][y];
+
+			return new Intersection(x, y, nRoad, sRoad, eRoad, wRoad);
+		});
+
+		this.buildings = [new Building(0, 0, 2, 2)];
+		this.base = new Base();
+	}
+
 	async generate() {
-		for(let i=0; i<this.nsRoads.length; i++) {
-			for(let j=0; j<this.nsRoads[i].length; j++) {
-				this.nsRoads[i][j].setType(i%4);
+		/* 1. Add highways */
+		this.addHighway(rand(3, 8), rand(3, 8), randBool(), randBool());
+
+		// for(let i=0; i<this.nsRoads.length; i++) {
+		// 	for(let j=0; j<this.nsRoads[i].length; j++) {
+		// 		this.nsRoads[i][j].setType(0);
+		// 		await wait();
+		// 	}
+		// }
+	}
+
+	async addHighway(x, y, xflipped, yflipped) {
+		if(yflipped) {
+			for(let i=this.nsRoads[0].length-1; i+1>y; i--) {
+				this.nsRoads[x][i].setType(3);
+				await wait();
+			}
+		} else {
+			for(let i=0; i<y; i++) {
+				this.nsRoads[x][i].setType(3);
+				await wait();
+			}
+		}
+
+		if(xflipped) {
+			for(let i=x-1; i>=0; i--) {
+				this.ewRoads[i][y].setType(3);
+				await wait();
+			}
+		}else{
+			for(let i=x; i<this.ewRoads[0].length-1; i++) {
+				this.ewRoads[i][y].setType(3);
 				await wait();
 			}
 		}
