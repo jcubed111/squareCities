@@ -178,6 +178,27 @@ class Road extends Renderable{
 		this.intersection1 = null; // the intersection to the south or west
 	}
 
+	bounds() {
+		const size0 = this.intersection0.getSize();
+		const size1 = this.intersection1.getSize();
+
+		if(this.isNS) {
+			return [
+				-65 +  this.xIndex*10 + 10 - this.type, // xmin
+				-65 +  this.xIndex*10 + 10 + this.type, // xmax
+				-65 +  this.yIndex*10 + 10 + size1, // ymin
+				-65 +  this.yIndex*10 + 20 - size0 // ymax
+			];
+		}else{
+			return [
+				-65 +  this.xIndex*10 + 10 + size1, // xmin
+				-65 +  this.xIndex*10 + 20 - size0, // xmax
+				-65 +  this.yIndex*10 + 10 - this.type, // ymin
+				-65 +  this.yIndex*10 + 10 + this.type // ymax
+			];
+		}
+	}
+
 	generateVerts() {
 		if(this.type == 0) return [];
 		const roadZ = this.type == 3 ? 2.0 : 0.1;
@@ -199,31 +220,15 @@ class Road extends Renderable{
 			new TexSpec(8, 1, 9, 2),
 		];
 
-		if(this.isNS) {
-			const xMin = -65 +  this.xIndex*10 + 10 - this.type;
-			const xMax = -65 +  this.xIndex*10 + 10 + this.type;
-			const yMin = -65 +  this.yIndex*10 + 10 + size1;
-			const yMax = -65 +  this.yIndex*10 + 20 - size0;
-			return building(
-				new Vert(xMin, yMin, 0),
-				new Vert(xMax, yMax, roadZ),
-				sideBySize[this.type],
-				texBySize[this.type],
-				true
-			);
-		}else{
-			const xMin = -65 +  this.xIndex*10 + 10 + size1;
-			const xMax = -65 +  this.xIndex*10 + 20 - size0;
-			const yMin = -65 +  this.yIndex*10 + 10 - this.type;
-			const yMax = -65 +  this.yIndex*10 + 10 + this.type;
-			return building(
-				new Vert(xMin, yMin, 0),
-				new Vert(xMax, yMax, roadZ),
-				sideBySize[this.type],
-				texBySize[this.type],
-				false
-			);
-		}
+		const [xMin, xMax, yMin, yMax] = this.bounds();
+
+		return building(
+			new Vert(xMin, yMin, 0),
+			new Vert(xMax, yMax, roadZ),
+			sideBySize[this.type],
+			texBySize[this.type],
+			this.isNS
+		);
 	}
 
 	setType(t) {
@@ -258,12 +263,12 @@ class Building extends Renderable{
 	}
 
 	generateVerts() {
-		return objectToVertArray("building");
+		// return objectToVertArray("building");
 		return building(
 	        new Vert(this.x, this.y, 0),
 	        new Vert(this.x+this.dx, this.y+this.dy, 10),
 			new TexSpec(0, 2, 1, 6),
-			new TexSpec(0, 0, 0, 0, 200, 190, 180),
+			new TexSpec(2, 2, 3, 3, 255, 255, 255),
 	    );
 	}
 }
@@ -359,7 +364,7 @@ class World{
 			return new Intersection(x, y, nRoad, sRoad, eRoad, wRoad);
 		});
 
-		this.buildings = [new Building(0, 0, 2, 2)];
+		this.buildings = [];
 		this.base = new Base();
 	}
 
@@ -464,6 +469,87 @@ class World{
 				this.zoning[x][y] = zone;
 				this.base.markDirty();
 				await wait(0.25);
+			}
+		}
+
+		/* 6. Set gridFilled */
+		this.intersections.forEach(set => set.forEach(i => {
+			const s = i.getSize();
+			for(let x = i.xIndex*10 - s; x < i.xIndex*10 + s; x++) {
+				for(let y = i.yIndex*10 - s; y < i.yIndex*10 + s; y++) {
+					this.gridFilled[x][y] = true;
+				}
+			}
+		}));
+		this.nsRoads.forEach(set => set.forEach(r => {
+			if(r.type == 0) return;
+			const [xMin, xMax, yMin, yMax] = r.bounds();
+			for(let x = xMin; x < xMax; x++) {
+				for(let y = yMin; y < yMax; y++) {
+					this.gridFilled[x+55][y+55] = true;
+				}
+			}
+		}));
+		this.ewRoads.forEach(set => set.forEach(r => {
+			if(r.type == 0) return;
+			const [xMin, xMax, yMin, yMax] = r.bounds();
+			for(let x = xMin; x < xMax; x++) {
+				for(let y = yMin; y < yMax; y++) {
+					this.gridFilled[x+55][y+55] = true;
+				}
+			}
+		}));
+
+		/* 7. Add buildings */
+		for(let x=1; x<10; x++) {
+			for(let y=1; y<10; y++) {
+				const zone = this.zoning[x][y];
+				await this.addBuildings(zone, x*10, y*10, x*10+10, y*10+10);
+			}
+		}
+
+		/* 8. Make the ground look normal */
+		this.zoning = makeArray(11, 11, () => 0);
+		this.base.markDirty();
+	}
+
+	async addBuildings(zoneType, xmin, ymin, xmax, ymax) {
+								  // null, res, ind, com, green
+		const maxSizeByZoneType = [1, 2, 4, 3, 1];
+
+		for(let x=xmin; x<xmax; x++) {
+			for(let y=ymin; y<ymax; y++) {
+				if(this.gridFilled[x][y]) continue;
+
+				// determine the max building size we can put here
+				let maxSize = Math.min(xmax - x, ymax - y);
+				maxSize = Math.min(maxSize, maxSizeByZoneType[zoneType]);
+				while(!this.groundClear(x, y, maxSize)) {
+					maxSize--;
+				}
+
+				const size = rand(1, maxSize);
+
+				this.buildings.push(new Building(x-55, y-55, size, size));
+				this.fillGround(x, y, size);
+				await wait(0);
+			}
+		}
+	}
+
+	groundClear(x, y, s) {
+		for(let i=0; i<s; i++) {
+			for(let j=0; j<s; j++) {
+				if(this.gridFilled[x+i][y+j]) return false;
+			}
+		}
+		return true;
+	}
+
+	fillGround(x, y, s) {
+		for(let i=0; i<s; i++) {
+			for(let j=0; j<s; j++) {
+				this.gridFilled[x+i][y+j] = true;
 			}
 		}
 	}
