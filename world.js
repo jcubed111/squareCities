@@ -269,26 +269,32 @@ class Building extends Renderable{
 }
 
 class Base extends Renderable{
+	constructor(world) {
+		super();
+		this.world = world;
+	}
+
 	generateVerts() {
+		const zoneColors = [
+			[26, 223, 26],
+			[255, 0, 255], // res
+			[255, 255, 0], // ind
+			[0, 0, 255], // comm
+			[26, 223, 26], // green
+		];
 		const verts = [];
 		for(let x=0; x < 11; x++) {
 			for(let y=0; y < 11; y++) {
+				let [r, g, b] = zoneColors[world.zoning[x][y]];
 				verts.push.apply(verts, square(
-					new Vert(x*10-55, y*10-55, 0, 13.25, 1.25),
-					new Vert(x*10-45, y*10-55, 0, 15.75, 1.25),
-					new Vert(x*10-45, y*10-45, 0, 15.75, 3.75),
-					new Vert(x*10-55, y*10-45, 0, 13.25, 3.75)
+					new Vert(x*10-55, y*10-55, 0, r, g, b, 13.25, 1.25),
+					new Vert(x*10-45, y*10-55, 0, r, g, b, 15.75, 1.25),
+					new Vert(x*10-45, y*10-45, 0, r, g, b, 15.75, 3.75),
+					new Vert(x*10-55, y*10-45, 0, r, g, b, 13.25, 3.75)
 				));
 			}
 		}
 		return verts;
-
-		return building(
-	        new Vert(-55, -55, -5),
-	        new Vert(55, 55, 0),
-			new TexSpec(1, 0, 16, 1),
-			new TexSpec(0, 0, 0, 0, 0, 216, 0),
-	    );
 	}
 }
 
@@ -303,7 +309,6 @@ function makeArray(w, h, valFunction) {
 	return ret;
 }
 
-var doWaits = true;
 async function wait(f = 1) {
 	if(!doWaits) return;
 	await new Promise(resolve => setTimeout(resolve, f*100));
@@ -338,6 +343,7 @@ class World{
 
 		// grid used when generating buildings
 		this.gridFilled = makeArray(minorWidth, minorHeight, () => false);
+		this.zoning = makeArray(11, 11, () => 0);
 
 		const nullRoad = new Road();
 		nullRoad.type = 0;
@@ -429,6 +435,35 @@ class World{
 						await wait(0.5);
 					}
 				}
+			}
+		}
+
+		/* 5. Zoning */
+		const choicesByRing = [
+			// relative prob of each zone type
+			// residential, industrial, commercial, green space
+			[0, 0, 4, 2],
+			[0, 1, 4, 1],
+			[2, 1, 3, 1],
+			[6, 2, 2, 1],
+			[6, 1, 2, 1],
+		].map(probs => {
+			const choices = [];
+			probs.forEach((p, i) => {
+				for(let n=0; n<p; n++) {
+					choices.push(i+1);
+				}
+			});
+			return choices;
+		});
+		for(let x=1; x<10; x++) {
+			for(let y=1; y<10; y++) {
+				const ring = Math.max(Math.abs(5 - x), Math.abs(5 - y));
+				const choices = choicesByRing[ring];
+				const zone = choices[rand(0, choices.length - 1)];
+				this.zoning[x][y] = zone;
+				this.base.markDirty();
+				await wait(0.25);
 			}
 		}
 	}

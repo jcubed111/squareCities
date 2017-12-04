@@ -20,3 +20,4 @@ var shadowRenderBuffer;
 var shadowTexSize = 1024*2;
 
 var manualControl = true;
+var doWaits = false;
