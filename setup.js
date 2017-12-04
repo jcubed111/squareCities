@@ -244,8 +244,8 @@ function setup() {
     });
 
     window.addEventListener('keypress', function(e) {
+        if(e.charCode != 32) return;
         document.getElementById('instructions').className = "hidden";
-        if(e.keyCode != 32) return;
         cancelWait();
         doWaits = false;
         world.reset();
