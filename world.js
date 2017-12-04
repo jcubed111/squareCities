@@ -253,20 +253,21 @@ class Road extends Renderable{
 }
 
 class Building extends Renderable{
-	constructor(x, y, dx, dy) {
+	constructor(x, y, dx, dy, height) {
 		super();
 
 		this.x = x;
 		this.y = y;
 		this.dx = dx;
 		this.dy = dy;
+		this.height = height;
 	}
 
 	generateVerts() {
 		// return objectToVertArray("building");
 		return building(
 	        new Vert(this.x, this.y, 0),
-	        new Vert(this.x+this.dx, this.y+this.dy, 10),
+	        new Vert(this.x+this.dx, this.y+this.dy, this.height),
 			new TexSpec(0, 2, 1, 6),
 			new TexSpec(2, 2, 3, 3, 255, 255, 255),
 	    );
@@ -529,11 +530,28 @@ class World{
 				}
 
 				const size = rand(1, maxSize);
-
-				this.buildings.push(new Building(x-55, y-55, size, size));
+				this.addBuilding(x-55, y-55, size, zoneType);
 				this.fillGround(x, y, size);
 				await wait(0);
 			}
+		}
+	}
+
+	addBuilding(x, y, size, zoneType) {
+		switch(zoneType) {
+			case 1: // res
+				// this.buildings.push(new House(x, y));
+				break;
+			case 2: // ind
+				break;
+			case 3: // com
+				const centerness = Math.pow(1 - Math.sqrt(x*x+y*y)/64, 4);
+				const height = 2 + rand(centerness*15, centerness*40);
+				this.buildings.push(new Building(x, y, size, size, height));
+				break;
+			case 4: // green
+				// this.buildings.push(new Tree(x, y));
+				break;
 		}
 	}
 
