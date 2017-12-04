@@ -16,6 +16,7 @@
             background: rgba(113, 211, 244, 1.0);
             background-image: linear-gradient(180deg, rgb(113, 211, 244), #baeeff);
             height: 100%;
+            font-family: Lato, sans-serif;
         }
 
         canvas{
@@ -34,7 +35,6 @@
             top: 0;
             font-size: 100px;
             color: #a2e5fc;
-            font-family: Lato, serif;
             margin: 50px 83px;
             z-index: 0;
         }
@@ -44,6 +44,26 @@
             position: relative;
             top: -45px;
             left: 6px;
+        }
+
+        #instructions{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            margin-left: -100px;
+            margin-top: -15px;
+            text-align: center;
+            font-size: 25px;
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 10;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        #instructions.hidden{
+            opacity: 0;
         }
     </style>
 
@@ -64,8 +84,9 @@
     <canvas id="view"></canvas>
     <h1>
         Square Cities<br/>
-        <small>John Stimac</small>
+        <small>&nbsp;John Stimac</small><br/>
     </h1>
+    <div id="instructions">Click to begin</div>
     <script src="globals.js"></script>
     <script src="setup.js"></script>
     <script src="vert.js"></script>

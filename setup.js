@@ -236,7 +236,7 @@ function setup() {
     });
 
     window.addEventListener('click', function(e) {
-        // if(e.keyCode != 32) return;
+        document.getElementById('instructions').className = "hidden";
         cancelWait();
         doWaits = true;
         world.reset();
@@ -244,6 +244,7 @@ function setup() {
     });
 
     window.addEventListener('keypress', function(e) {
+        document.getElementById('instructions').className = "hidden";
         if(e.keyCode != 32) return;
         cancelWait();
         doWaits = false;
