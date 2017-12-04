@@ -38,6 +38,13 @@
             margin: 50px 83px;
             z-index: 0;
         }
+
+        small{
+            font-size: 34px;
+            position: relative;
+            top: -45px;
+            left: 6px;
+        }
     </style>
 
     <script>
@@ -55,7 +62,10 @@
 </head>
 <body>
     <canvas id="view"></canvas>
-    <h1>Square Cities</h1>
+    <h1>
+        Square Cities<br/>
+        <small>John Stimac</small>
+    </h1>
     <script src="globals.js"></script>
     <script src="setup.js"></script>
     <script src="vert.js"></script>
@@ -65,7 +75,7 @@
     <script>
         setup();
         step();
-        world.generate();
+        // world.generate();
     </script>
 </body>
 </html>
