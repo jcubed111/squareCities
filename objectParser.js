@@ -1,4 +1,4 @@
-function objectToVertArray(objectName, rot=0, translateX=0, translateY=0) {
+function objectToVertArray(objectName, rot=0, translateX=0, translateY=0, translateZ=0) {
 	const source = objectFiles[objectName];
 	const lines = source.split("\n");
 
@@ -30,6 +30,7 @@ function objectToVertArray(objectName, rot=0, translateX=0, translateY=0) {
 		];
 		v[0] += translateX;
 		v[1] += translateY;
+		v[2] += translateZ;
 	});
 
 	const result = [];

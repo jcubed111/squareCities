@@ -274,6 +274,37 @@ class Building extends Renderable{
 	}
 }
 
+class House extends Renderable{
+	constructor(x, y, size) {
+		super();
+
+		this.x = x;
+		this.y = y;
+		this.size = size;
+		this.rot = rand(0, 3);
+	}
+
+	generateVerts() {
+		return objectToVertArray("house"+this.size, this.rot, this.x+this.size/2, this.y+this.size/2);
+	}
+}
+
+class Tree extends Renderable{
+	constructor(x, y, size) {
+		super();
+
+		this.x = x + Math.random()*0.5 + 0.25;
+		this.y = y + Math.random()*0.5 + 0.25;
+		this.z = -Math.random()*0.7;
+		this.size = size;
+		this.rot = Math.random() * 4;
+	}
+
+	generateVerts() {
+		return objectToVertArray("tree", this.rot, this.x, this.y, this.z);
+	}
+}
+
 class Base extends Renderable{
 	constructor(world) {
 		super();
@@ -283,7 +314,7 @@ class Base extends Renderable{
 	generateVerts() {
 		const zoneColors = [
 			[26, 223, 26],
-			[255, 0, 255], // res
+			[255, 150, 150], // res
 			[255, 255, 0], // ind
 			[0, 0, 255], // comm
 			[26, 223, 26], // green
@@ -540,7 +571,7 @@ class World{
 	addBuilding(x, y, size, zoneType) {
 		switch(zoneType) {
 			case 1: // res
-				// this.buildings.push(new House(x, y));
+				this.buildings.push(new House(x, y, size));
 				break;
 			case 2: // ind
 				break;
@@ -550,7 +581,7 @@ class World{
 				this.buildings.push(new Building(x, y, size, size, height));
 				break;
 			case 4: // green
-				// this.buildings.push(new Tree(x, y));
+				this.buildings.push(new Tree(x, y));
 				break;
 		}
 	}
